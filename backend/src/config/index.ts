@@ -2,6 +2,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// On Vercel, use /tmp for SQLite (only writable directory)
+const isVercel = !!process.env.VERCEL;
+const defaultDbUrl = isVercel ? 'file:/tmp/dev.db' : 'file:./dev.db';
+
 function required(key: string, fallback?: string): string {
   const value = process.env[key] ?? fallback;
   if (value === undefined) {
@@ -26,12 +30,12 @@ function int(key: string, fallback: number): number {
 }
 
 export const config = {
-  env: optional('NODE_ENV', 'development') as string,
+  env: optional('NODE_ENV', isVercel ? 'production' : 'development') as string,
   port: int('PORT', 3000),
   apiPrefix: optional('API_PREFIX', '/api/v1') as string,
 
   database: {
-    url: required('DATABASE_URL', 'file:./dev.db'),
+    url: required('DATABASE_URL', defaultDbUrl),
   },
 
   jwt: {
@@ -48,7 +52,7 @@ export const config = {
   },
 
   storage: {
-    uploadDir: optional('UPLOAD_DIR', './uploads') as string,
+    uploadDir: optional('UPLOAD_DIR', isVercel ? '/tmp/uploads' : './uploads') as string,
     s3: {
       endpoint: optional('S3_ENDPOINT'),
       bucket: optional('S3_BUCKET'),
@@ -96,8 +100,9 @@ export const config = {
     max: int('RATE_LIMIT_MAX', 300),
   },
 
-  isProduction: optional('NODE_ENV', 'development') === 'production',
-  isDevelopment: optional('NODE_ENV', 'development') === 'development',
+  isProduction: optional('NODE_ENV', isVercel ? 'production' : 'development') === 'production',
+  isDevelopment: optional('NODE_ENV', isVercel ? 'production' : 'development') === 'development',
+  isVercel,
 } as const;
 
 export type AppConfig = typeof config;

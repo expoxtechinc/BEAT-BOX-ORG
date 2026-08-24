@@ -5,6 +5,10 @@
 // Vercel automatically detects and deploys this file from the /api directory.
 // =============================================================================
 
+// CRITICAL: Set DATABASE_URL before any other imports so Prisma can read it
+import { ensureDatabaseUrl, initDatabase } from '../backend/src/config/db-init';
+ensureDatabaseUrl();
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 import cors from 'cors';
@@ -51,6 +55,13 @@ app.use(apiRateLimiter);
 
 // Static files for uploads (if using local storage)
 const uploadPath = path.resolve(config.storage.uploadDir);
+try {
+  if (!require('fs').existsSync(uploadPath)) {
+    require('fs').mkdirSync(uploadPath, { recursive: true });
+  }
+} catch (e) {
+  // Directory creation may fail, that's OK
+}
 app.use('/uploads', express.static(uploadPath, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.mp3')) res.setHeader('Content-Type', 'audio/mpeg');
@@ -61,7 +72,7 @@ app.use('/uploads', express.static(uploadPath, {
   },
 }));
 
-// Stripe webhook (raw body)
+// Stripe webhook (raw body) — must be before express.json
 app.post('/api/v1/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['stripe-signature'] as string;
   if (!signature) {
@@ -108,6 +119,7 @@ app.get('/health', (req, res) => {
     environment: config.env,
     timestamp: new Date().toISOString(),
     stripeEnabled: config.stripe.enabled,
+    vercel: config.isVercel,
   }));
 });
 
@@ -115,5 +127,19 @@ app.get('/health', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Export as Vercel serverless function
-export default app;
+// Initialize database on cold start, then export the app
+// Vercel will call the default export for each request
+let dbInitPromise: Promise<void> | null = null;
+
+async function ensureDbReady() {
+  if (!dbInitPromise) {
+    dbInitPromise = initDatabase();
+  }
+  await dbInitPromise;
+}
+
+// Export a handler that ensures DB is ready before processing requests
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  await ensureDbReady();
+  return app(req, res);
+}

@@ -1,10 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": "cd backend && npm install && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts",
-  "devCommand": "cd backend && npm run dev",
-  "installCommand": "cd backend && npm install",
-  "framework": null,
+  "installCommand": "npm install && npx prisma generate --schema=backend/prisma/schema.prisma",
   "functions": {
     "api/index.ts": {
       "maxDuration": 60,
@@ -13,10 +9,6 @@
   },
   "routes": [
     {
-      "src": "/uploads/(.*)",
-      "dest": "/api/v1/uploads/$1"
-    },
-    {
       "src": "/api/v1/(.*)",
       "dest": "/api"
     },
@@ -24,8 +16,5 @@
       "src": "/health",
       "dest": "/api"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
