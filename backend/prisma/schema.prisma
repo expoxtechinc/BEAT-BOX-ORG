@@ -1,0 +1,466 @@
+// =============================================================================
+// BeatBox Database Schema
+// =============================================================================
+// All entities for the BeatBox music platform.
+// Uses SQLite for development, PostgreSQL for production.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// USERS & AUTHENTICATION
+// =============================================================================
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  // role: "USER" | "ADMIN"
+  role            String   @default("USER")
+  emailVerified   Boolean  @default(false)
+  emailVerifyToken String?  @unique
+  passwordResetToken String? @unique
+  passwordResetExpires DateTime?
+  isDeleted       Boolean  @default(false)
+  deletedAt       DateTime?
+
+  // Premium system - server authoritative
+  premiumFreeUses Int      @default(5) // Starts at 5, decremented atomically
+
+  // Relations
+  profile         Profile?
+  music           Music[]
+  playlists       Playlist[]
+  favorites       Favorite[]
+  likes           Like[]
+  plays           RecentlyPlayed[]
+  notifications   Notification[]
+  reportsFiled    Report[]         @relation("ReporterReports")
+  reportsAgainst  Report[]         @relation("ReportedReports")
+  sessions        Session[]
+  subscription    Subscription?
+  stripeCustomer  StripeCustomer?
+  premiumUsages   PremiumUsage[]
+  searchHistory   SearchHistory[]
+  uploadedArtwork UploadArtwork[]
+
+  // Social
+  followers       Follow[]  @relation("Following")
+  following       Follow[]  @relation("Follower")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String
+  deviceInfo   String?
+  ipAddress   String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username    String   @unique
+  displayName String
+  bio         String?  @default("")
+  avatarUrl   String?
+  bannerUrl   String?
+  location    String?
+  website     String?
+  isPublic    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([username])
+}
+
+// =============================================================================
+// MUSIC & AUDIO
+// =============================================================================
+
+model Music {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  artistName    String
+  albumName     String?
+  genre         String?
+  description   String?      @default("")
+  audioUrl      String
+  audioKey      String       // Storage key for the audio file
+  artworkUrl    String?
+  artworkKey    String?
+  duration      Int?         // Duration in seconds
+  fileSize      Int?         // File size in bytes
+  format        String?      // mp3, wav, m4a, etc.
+  bitrate       Int?
+  isPublished   Boolean      @default(true)
+  isFeatured    Boolean      @default(false)
+  isReported    Boolean      @default(false)
+  isRemoved     Boolean      @default(false) // Admin removal
+  playCount     Int          @default(0)
+  likeCount     Int          @default(0)
+  favoriteCount Int          @default(0)
+
+  categoryId    String?
+  category      Category?    @relation(fields: [categoryId], references: [id])
+  albumId       String?
+  album         Album?       @relation(fields: [albumId], references: [id])
+
+  // Relations
+  favorites     Favorite[]
+  likes         Like[]
+  plays         RecentlyPlayed[]
+  playlistItems PlaylistItem[]
+  reports       Report[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@index([playCount])
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  iconUrl     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  music       Music[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Album {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  artistName  String
+  description String?
+  artworkUrl  String?
+  releaseDate DateTime?
+  music       Music[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Separate table for upload artwork (cover art management)
+model UploadArtwork {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url       String
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// =============================================================================
+// PLAYLISTS
+// =============================================================================
+
+model Playlist {
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?        @default("")
+  coverUrl     String?
+  isPublic     Boolean        @default(true)
+  items        PlaylistItem[]
+  playCount    Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model PlaylistItem {
+  id          String   @id @default(uuid())
+  playlistId  String
+  playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  musicId     String
+  music       Music    @relation(fields: [musicId], references: [id], onDelete: Cascade)
+  sortOrder   Int      @default(0)
+  addedAt     DateTime @default(now())
+
+  @@unique([playlistId, musicId])
+  @@index([playlistId])
+  @@index([musicId])
+}
+
+// =============================================================================
+// SOCIAL: LIKES, FAVORITES, FOLLOWS
+// =============================================================================
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  musicId   String
+  music     Music    @relation(fields: [musicId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, musicId])
+  @@index([userId])
+  @@index([musicId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  musicId   String
+  music     Music    @relation(fields: [musicId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, musicId])
+  @@index([userId])
+  @@index([musicId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model RecentlyPlayed {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  musicId   String
+  music     Music    @relation(fields: [musicId], references: [id], onDelete: Cascade)
+  playedAt  DateTime @default(now())
+
+  @@index([userId, playedAt])
+  @@index([musicId])
+}
+
+// =============================================================================
+// SEARCH
+// =============================================================================
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// =============================================================================
+// PREMIUM SYSTEM (Server-Authoritative)
+// =============================================================================
+
+model PremiumUsage {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featureKey  String   // e.g. "analytics", "boost", "advanced_tools"
+  usedAt      DateTime @default(now())
+
+  @@index([userId, featureKey])
+  @@index([userId])
+}
+
+model PremiumFeature {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g. "analytics", "boost", "featured_placement"
+  name        String
+  description String?
+  iconUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// =============================================================================
+// SUBSCRIPTIONS & STRIPE
+// =============================================================================
+
+model Subscription {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // status: "FREE" | "ACTIVE" | "PAST_DUE" | "CANCELED" | "EXPIRED"
+  status              String   @default("FREE")
+  // plan: "FREE" | "MONTHLY" | "YEARLY"
+  plan                String   @default("FREE")
+  stripeSubscriptionId String? @unique
+  stripePriceId       String?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean  @default(false)
+  canceledAt          DateTime?
+  trialEnd            DateTime?
+
+  // Audit fields
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([status])
+  @@index([plan])
+}
+
+model StripeCustomer {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId String  @unique
+  email           String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PaymentRecord {
+  id                  String   @id @default(uuid())
+  userId              String
+  stripeInvoiceId     String?  @unique
+  stripeChargeId      String?
+  stripePaymentIntentId String?
+  amount              Int      // In cents
+  currency            String   @default("usd")
+  status              String   // paid, failed, pending
+  description         String?
+  failureReason       String?
+  invoiceUrl          String?
+  invoicePdfUrl       String?
+  periodStart         DateTime?
+  periodEnd           DateTime?
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WebhookEvent {
+  id              String   @id @default(uuid())
+  stripeEventId   String   @unique
+  type            String
+  processed       Boolean  @default(false)
+  processedAt     DateTime?
+  payload         String   // JSON string of the event
+  error           String?
+  createdAt       DateTime @default(now())
+
+  @@index([type])
+  @@index([processed])
+}
+
+// =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // type: NEW_MUSIC, NEW_FOLLOWER, NEW_LIKE, NEW_COMMENT, SUBSCRIPTION_RENEWED,
+  //       PAYMENT_FAILED, SUBSCRIPTION_CANCELED, SUBSCRIPTION_EXPIRED, ACCOUNT_INFO, SYSTEM
+  type      String
+  title     String
+  body      String
+  data      String?  // JSON string of additional data
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// CONTENT MODERATION
+// =============================================================================
+
+model Report {
+  id           String   @id @default(uuid())
+  reporterId   String
+  reporter     User     @relation("ReporterReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String?
+  reportedUser  User?   @relation("ReportedReports", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  reportedMusicId String?
+  music        Music?   @relation(fields: [reportedMusicId], references: [id], onDelete: Cascade)
+  // reason: COPYRIGHT, INAPPROPRIATE_CONTENT, SPAM, HARASSMENT, OTHER
+  reason       String
+  description  String?
+  // status: PENDING, UNDER_REVIEW, RESOLVED, DISMISSED
+  status       String   @default("PENDING")
+  resolvedBy   String?  // Admin user ID
+  resolvedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([reportedMusicId])
+  @@index([reportedUserId])
+}
+
+model BlockedUser {
+  id          String   @id @default(uuid())
+  userId      String   // The user who blocked
+  blockedId   String   // The user who is blocked
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, blockedId])
+  @@index([userId])
+  @@index([blockedId])
+}
+
+// =============================================================================
+// APP CONFIGURATION
+// =============================================================================
+
+model AppConfig {
+  id              String   @id @default(uuid())
+  key             String   @unique
+  value           String
+  description     String?
+  isPublic        Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
+}

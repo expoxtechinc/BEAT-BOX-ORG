@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BeatBox</string>
+    <string name="app_tagline">Your Music. Your Platform.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to BeatBox</string>
+    <string name="onboarding_welcome_desc">Discover, upload, and share music with the world.</string>
+    <string name="onboarding_upload_title">Upload Your Music</string>
+    <string name="onboarding_upload_desc">Upload your music for free. No subscription required. Ever.</string>
+    <string name="onboarding_discover_title">Discover Music</string>
+    <string name="onboarding_discover_desc">Find new music from creators around the world.</string>
+    <string name="onboarding_premium_title">Premium Features</string>
+    <string name="onboarding_premium_desc">Get 5 free premium uses. Subscribe anytime for unlimited access.</string>
+
+    <!-- Auth -->
+    <string name="login">Log In</string>
+    <string name="signup">Sign Up</string>
+    <string name="logout">Log Out</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="display_name">Display Name</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_discover">Discover</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_library">Library</string>
+    <string name="nav_upload">Upload</string>
+
+    <!-- Upload -->
+    <string name="upload_music">Upload Music</string>
+    <string name="upload_free">Upload is FREE</string>
+    <string name="select_audio">Select Audio File</string>
+    <string name="select_artwork">Select Cover Artwork</string>
+    <string name="title">Title</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="album">Album</string>
+    <string name="genre">Genre</string>
+    <string name="description">Description</string>
+
+    <!-- Premium -->
+    <string name="premium_title">BeatBox Premium</string>
+    <string name="premium_free_uses">Free Premium Uses</string>
+    <string name="premium_subscribe">Subscribe</string>
+    <string name="premium_monthly">Monthly</string>
+    <string name="premium_yearly">Yearly</string>
+    <string name="premium_paywall_message">You\'ve used your 5 free premium uses. Subscribe to BeatBox Premium to continue.</string>
+
+    <!-- Misc -->
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="empty">Nothing here yet</string>
+</resources>

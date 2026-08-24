@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    BeatBox Font Family - Times New Roman
+    =====================================
+    This font family definition uses the system "serif" family as a fallback,
+    which on most Android devices renders as Times New Roman or an equivalent serif font.
+
+    For EXACT Times New Roman rendering, place a properly licensed Times New Roman
+    .ttf or .otf font file in res/font/ and reference it here.
+
+    The entire app uses this single font family definition, so changing the font
+    can be done from this one location.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        android:font="@font/beatbox_serif_regular" />
+    <font
+        android:fontStyle="italic"
+        android:fontWeight="400"
+        android:font="@font/beatbox_serif_regular" />
+    <font
+        android:fontStyle="normal"
+        android:fontWeight="700"
+        android:font="@font/beatbox_serif_bold" />
+    <font
+        android:fontStyle="italic"
+        android:fontWeight="700"
+        android:font="@font/beatbox_serif_bold" />
+</font-family>

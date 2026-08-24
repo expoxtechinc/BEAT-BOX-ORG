@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- BeatBox Brand Colors -->
+    <color name="brand_primary">#6C5CE7</color>
+    <color name="brand_primary_dark">#5849C2</color>
+    <color name="brand_accent">#00CEC9</color>
+    <color name="brand_error">#E74C3C</color>
+    <color name="brand_success">#00B894</color>
+    <color name="brand_warning">#FDCB6E</color>
+
+    <!-- Light Theme -->
+    <color name="light_background">#F8F9FA</color>
+    <color name="light_surface">#FFFFFF</color>
+    <color name="light_on_background">#1A1A2E</color>
+    <color name="light_on_surface">#1A1A2E</color>
+    <color name="light_outline">#E0E0E0</color>
+
+    <!-- Dark Theme -->
+    <color name="dark_background">#0F0F1A</color>
+    <color name="dark_surface">#1A1A2E</color>
+    <color name="dark_on_background">#F8F9FA</color>
+    <color name="dark_on_surface">#F8F9FA</color>
+    <color name="dark_outline">#2D2D44</color>
+
+    <!-- Splash -->
+    <color name="splash_background">#0F0F1A</color>
+</resources>

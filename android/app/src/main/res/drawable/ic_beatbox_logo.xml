@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#6C5CE7"
+        android:pathData="M60,60m-55,0a55,55 0,1 1,110 0a55,55 0,1 1,-110 0" />
+    <!-- Sound wave bars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,45 L45,45 L45,75 L40,75 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,35 L55,35 L55,85 L50,85 Z" />
+    <path
+        android:fillColor="#00CEC9"
+        android:pathData="M60,40 L65,40 L65,80 L60,80 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,35 L75,35 L75,85 L70,85 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M80,45 L85,45 L85,75 L80,75 Z" />
+</vector>
